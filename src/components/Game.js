@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { makeStyles, withStyles } from '@material-ui/core/styles'
 import LinearProgress from '@material-ui/core/LinearProgress'
-import IconButton from '@material-ui/core/IconButton'
 import Grid from '@material-ui/core/Grid'
-import Board from './Board'
+import Select from '@material-ui/core/Select'
+import MenuItem from '@material-ui/core/MenuItem'
+import IconButton from '@material-ui/core/IconButton'
 import ComputerIcon from '@material-ui/icons/Computer'
 import UndoIcon from '@material-ui/icons/Undo'
 import ReplayIcon from '@material-ui/icons/Replay'
 
+import Board from './Board'
 import GameState from '../GameState'
 
 const useStyles = makeStyles({
@@ -16,13 +18,15 @@ const useStyles = makeStyles({
     winningRatio: {
         width: '200px',
         height: '15px',
-        marginTop: '8px',
         outlineStyle: 'solid',
         outlineColor: 'black',
         outlineWidth: 'thin',
         determinate: {
             color: 'red',
         }
+    },
+    aiLevel: {
+        minWidth: '100px',
     },
 })
 
@@ -42,18 +46,22 @@ export default function Game({
     onRestart,
     onUndo,
     onComputer,
+    onAILevel,
 }) {
-    const classes = useStyles()
-
     const [winningRatio, setWinningRatio] = useState(50)
+    const [policy, setPolicy] = useState([])
+    const [aiLevel, setAILevel] = useState(0)
 
     useEffect(() => {
         if (gameState.result === GameState.RESULT_BLACK_WIN) {
             setWinningRatio(100)
+            setPolicy([])
         } else if (gameState.result === GameState.RESULT_WHITE_WIN) {
             setWinningRatio(0)
+            setPolicy([])
         } else if (gameState.result === GameState.RESULT_DRAW) {
             setWinningRatio(50)
+            setPolicy([])
         } else {
             (async () => {
                 const modelInput = pvnet.getModelInput(gameState)
@@ -63,11 +71,12 @@ export default function Game({
                     if (!GameState.isBlackTurn(gameState.turn)) {
                         value *= -1.0
                     }
-
+    
                     value = Math.floor((value * 0.5 + 0.5) * 100)
                     value = Math.min(Math.max(value, 1), 99)
-
+    
                     setWinningRatio(value)
+                    setPolicy(modelOutput.policy)
                 }
             })()
         }
@@ -75,15 +84,25 @@ export default function Game({
         // eslint-disable-next-line
     }, [gameState.history])
 
+    const classes = useStyles()
     return (
         <div className={classes.root}>
-            <Grid container justify='space-between'>
-                <Grid item>
-                    {(0 < gameState.turn) && <StyledLinearProgress
+            <Grid container justify='space-between' alignItems='center'>
+                <Grid item xs>
+                    {(0 < gameState.turn) && <StyledLinearProgress                   
                         className={classes.winningRatio}
                         variant="determinate"
-                        value={winningRatio} />}
+                        value={winningRatio} 
+                    />}
                 </Grid>
+                <Select
+                    className={classes.aiLevel} 
+                    value={aiLevel}
+                    onChange={(e) => {setAILevel(e.target.value);onAILevel(e.target.value)}}>
+                    <MenuItem value={0}>Easy</MenuItem>
+                    <MenuItem value={1}>Medium</MenuItem>
+                    <MenuItem value={2}>Hard</MenuItem>
+                </Select>        
                 <Grid item>
                     <Grid container justify='flex-end'>
                         <IconButton size='small' onClick={() => onRestart()}>
@@ -101,8 +120,8 @@ export default function Game({
             <Board
                 boardSize={gameState.boardSize}
                 history={gameState.history}
-                onSelect={onSelect}>
-            </Board>
+                policy={policy}
+                onSelect={onSelect}/>
         </div>
     )
 }

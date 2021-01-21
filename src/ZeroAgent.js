@@ -5,7 +5,12 @@ class ZeroAgent {
     constructor({boardSize, pvnet}) {
         this.boardSize = boardSize
         this.pvnet = pvnet
-        this.numMCTS = 25
+        this.level = 0
+        this.numSimulations = [1, 25, 400]
+    }
+
+    setLevel(level) {
+        this.level = level
     }
 
     async asyncGetAction(gameState) {
@@ -15,8 +20,9 @@ class ZeroAgent {
         }
 
         let rootNode = this.newNode()
+        let numSimulations = this.numSimulations[this.level] + 1
 
-        for (let i = 0; i < this.numMCTS + 1; ++i) {
+        for (let i = 0; i < numSimulations; ++i) {
             let curGameState = gameState.clone()
 
             let leafNode = this.processSelection(rootNode, curGameState)

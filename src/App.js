@@ -23,7 +23,7 @@ const BOARD_SIZE = 15
 
 const AppState = {
     DEFAULT: { text: "" },
-    MODEL_LOADING: { text: "모델을 로딩하고 있습니다. 잠시 기다려 주세요." },
+    MODEL_LOADING: { text: "AI를 준비하고 있습니다. 잠시 기다려 주세요." },
     WAITING_FOR_INPUT: { text: "원하는 위치를 터치하거나 컴퓨터 아이콘을 누르세요." },
     AGENT_THINKING: { text: "AI가 다음 수를 계산하고 있습니다..." },
     GAME_FINISHED: { text: "대국이 종료되었습니다. 다시 시작 버튼을 누르세요." }
@@ -128,6 +128,10 @@ function App() {
         }
     }
 
+    function onAILevel(aiLevel) {
+        zeroAgent.setLevel(aiLevel)
+    }
+
     const classes = useStyles()
     return (
         <div>
@@ -139,7 +143,8 @@ function App() {
                         onSelect={onSelect}
                         onRestart={onRestart}
                         onUndo={onUndo}
-                        onComputer={onComputer}>
+                        onComputer={onComputer}
+                        onAILevel={onAILevel}>
                     </Game>
                     <Typography color="textPrimary">
                         {appState.text}

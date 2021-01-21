@@ -69,7 +69,29 @@ function draw(canvas, history) {
     }
 }
 
-export default function Board({boardSize, history, onSelect}) {
+function drawPolicy(canvas, policy, boardSize) {
+    const context = canvas.getContext('2d')
+
+    for (let i = 0; i < policy.length; ++i)
+    {
+        let row = Math.floor(i / boardSize)
+        let col = i % boardSize
+        let [x, y] = boardPosToPixel(row, col)
+
+        let p = Math.floor(policy[i] * 100.0)
+        if (0 < p) {
+            let size = p/100 * STONE_RADIUS + 5
+            context.fillStyle = 'red'
+            context.fillStyle = 'rgba(255, 0, 0, 0.5)'
+            context.beginPath()
+            context.arc(x, y, size, 0, 2 * Math.PI)
+            context.closePath()        
+            context.fill()
+        }
+    }
+}
+
+export default function Board({boardSize, history, policy, onSelect}) {
     const classes = useStyles()
     const canvasRef = useRef()
 
@@ -89,6 +111,10 @@ export default function Board({boardSize, history, onSelect}) {
     useEffect(() => {
         draw(canvasRef.current, history)
     }, [history])
+
+    useEffect(() => {
+        drawPolicy(canvasRef.current, policy, boardSize)
+    }, [policy, boardSize])
 
     function onClick(event) {
         let x = event.pageX - event.target.offsetLeft
