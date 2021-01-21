@@ -24,15 +24,20 @@ function boardPosToPixel(row, col) {
     return [x, y]
 }
 
-function drawStone(context, row, col, isBlack) {
+function drawStone(context, row, col, turn) {
     let [x, y] = boardPosToPixel(row, col)
 
     context.beginPath()
     context.arc(x, y, STONE_RADIUS, 0, 2 * Math.PI)
-    context.fillStyle = isBlack ? 'black' : 'white'
+    context.fillStyle = (turn % 2 === 0) ? 'black' : 'white'
     context.fill()
     context.closePath()        
     context.stroke()
+
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.fillStyle = (turn % 2 !== 0) ? 'black' : 'white'
+    context.fillText(turn + 1, x, y)
 }
 
 function drawLastStoneIndicator(context, row, col) {
@@ -54,7 +59,8 @@ function draw(canvas, history) {
     for (let i = 0; i < history.length; ++i)
     {
         let [row, col] = history[i]
-        drawStone(context, row, col, i % 2 === 0)
+        
+        drawStone(context, row, col, i)
     }
 
     if (0 < history.length) {
