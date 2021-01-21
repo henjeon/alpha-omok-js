@@ -2,10 +2,14 @@ import 'fontsource-roboto'
 
 import React, { useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
+import { AppBar } from '@material-ui/core'
+import { Container }  from '@material-ui/core'
+import { Toolbar } from '@material-ui/core'
 import Grid from '@material-ui/core/Grid'
 import Typography from '@material-ui/core/Typography'
 
 import Game from './components/Game'
+import Readme from './components/Readme'
 import GameState from './GameState'
 import ZeroAgent from './ZeroAgent'
 import PVNet from './PVNet'
@@ -17,6 +21,9 @@ const useStyles = makeStyles({
         maxWidth: '100%',
         margin: '5vh',
     },
+    revision: {
+        justifyContent:'right',
+    }
 })
 
 const BOARD_SIZE = 15
@@ -135,22 +142,37 @@ function App() {
     const classes = useStyles()
     return (
         <div>
-            <Grid className={classes.root} container>
-                <Grid item>
-                    <Game
-                        gameState={gameState}
-                        pvnet={pvnet}
-                        onSelect={onSelect}
-                        onRestart={onRestart}
-                        onUndo={onUndo}
-                        onComputer={onComputer}
-                        onAILevel={onAILevel}>
-                    </Game>
-                    <Typography color="textPrimary">
-                        {appState.text}
-                    </Typography>
+            <AppBar position="static">
+                <Toolbar >
+                    <Grid container justify='space-between'>
+                        <Typography variant='h6'>
+                            AlphaOmok.js
+                        </Typography>
+                        <Typography variant='caption'>
+                            v0.1.0
+                        </Typography>
+                    </Grid>
+                </Toolbar>
+            </AppBar>
+            <Container>
+                <Grid className={classes.root} container>
+                    <Grid item>
+                        <Game
+                            gameState={gameState}
+                            pvnet={pvnet}
+                            onSelect={onSelect}
+                            onRestart={onRestart}
+                            onUndo={onUndo}
+                            onComputer={onComputer}
+                            onAILevel={onAILevel}>
+                        </Game>
+                        <Typography color="textPrimary">
+                            {appState.text}
+                        </Typography>
+                    </Grid>
                 </Grid>
-            </Grid>
+                <Readme/>
+            </Container>
         </div>
     )
 }
