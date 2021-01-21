@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 
 // 이미지 출처: https://tools.w3cub.com/gomoku
@@ -14,8 +14,8 @@ const useStyles = makeStyles({
     },
 })
 
-const imageBg = new Image()
-imageBg.src = canvasBg
+const imageBgCached = new Image()
+imageBgCached.src = canvasBg
 
 function boardPosToPixel(row, col) {
     let x = CELL_SIZE / 2 + col * CELL_SIZE
@@ -54,7 +54,7 @@ function draw(canvas, history) {
     const context = canvas.getContext('2d')
 
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(imageBg, 0, 0, canvas.width, canvas.height)
+    context.drawImage(imageBgCached, 0, 0, canvas.width, canvas.height)
 
     for (let i = 0; i < history.length; ++i)
     {
@@ -94,6 +94,7 @@ function drawPolicy(canvas, policy, boardSize) {
 export default function Board({boardSize, history, policy, onSelect}) {
     const classes = useStyles()
     const canvasRef = useRef()
+    const [ready, setReady] = useState(false)
 
     // componentDidMount()
     useEffect(() => {
@@ -103,18 +104,21 @@ export default function Board({boardSize, history, policy, onSelect}) {
         const dpi = 1
         const canvasSize = CELL_SIZE * boardSize
         canvas.width = canvasSize * dpi
-        canvas.height = canvasSize * dpi        
+        canvas.height = canvasSize * dpi
+
+        const imageBg = new Image()
+        imageBg.onload = () => { setReady(true) }
+        imageBg.src = canvasBg
 
         // eslint-disable-next-line
     }, [])  
 
     useEffect(() => {
-        draw(canvasRef.current, history)
-    }, [history])
-
-    useEffect(() => {
-        drawPolicy(canvasRef.current, policy, boardSize)
-    }, [policy, boardSize])
+        if (ready) {
+            draw(canvasRef.current, history)
+            drawPolicy(canvasRef.current, policy, boardSize)
+        }
+    }, [ready, history, policy, boardSize])
 
     function onClick(event) {
         let x = event.pageX - event.target.offsetLeft
