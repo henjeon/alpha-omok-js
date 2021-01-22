@@ -62,7 +62,7 @@ export default function Game({
         } else if (gameState.result === GameState.RESULT_DRAW) {
             setWinningRatio(50)
             setPolicy([])
-        } else {
+        } else if (0 < gameState.history.length) {
             (async () => {
                 const modelInput = pvnet.getModelInput(gameState)
                 const modelOutput = await pvnet.asyncForward(modelInput)

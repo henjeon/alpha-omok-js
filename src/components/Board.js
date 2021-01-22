@@ -50,12 +50,13 @@ function drawLastStoneIndicator(context, row, col) {
     context.stroke()
 }
 
-function draw(canvas, history) {
+function draw(canvas, history, policy, boardSize) {
     const context = canvas.getContext('2d')
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(imageBgCached, 0, 0, canvas.width, canvas.height)
 
+    // stone
     for (let i = 0; i < history.length; ++i)
     {
         let [row, col] = history[i]
@@ -63,30 +64,30 @@ function draw(canvas, history) {
         drawStone(context, row, col, i)
     }
 
+    // last stone indicator
     if (0 < history.length) {
         let [row, col] = history[history.length - 1]
         drawLastStoneIndicator(context, row, col)
     }
-}
 
-function drawPolicy(canvas, policy, boardSize) {
-    const context = canvas.getContext('2d')
+    // policy
+    if (policy && 0 < history.length) {
+        for (let i = 0; i < policy.length; ++i)
+        {
+            let row = Math.floor(i / boardSize)
+            let col = i % boardSize
+            let [x, y] = boardPosToPixel(row, col)
 
-    for (let i = 0; i < policy.length; ++i)
-    {
-        let row = Math.floor(i / boardSize)
-        let col = i % boardSize
-        let [x, y] = boardPosToPixel(row, col)
-
-        let p = Math.floor(policy[i] * 100.0)
-        if (0 < p) {
-            let size = p/100 * STONE_RADIUS + 5
-            context.fillStyle = 'red'
-            context.fillStyle = 'rgba(255, 0, 0, 0.5)'
-            context.beginPath()
-            context.arc(x, y, size, 0, 2 * Math.PI)
-            context.closePath()        
-            context.fill()
+            let p = Math.floor(policy[i] * 100.0)
+            if (0 < p && !history.find((pos) => (pos[0] === row && pos[1] === col))) {
+                let size = p/100 * STONE_RADIUS + 5
+                context.fillStyle = 'red'
+                context.fillStyle = 'rgba(255, 0, 0, 0.5)'
+                context.beginPath()
+                context.arc(x, y, size, 0, 2 * Math.PI)
+                context.closePath()        
+                context.fill()
+            }
         }
     }
 }
@@ -115,8 +116,7 @@ export default function Board({boardSize, history, policy, onSelect}) {
 
     useEffect(() => {
         if (ready) {
-            draw(canvasRef.current, history)
-            drawPolicy(canvasRef.current, policy, boardSize)
+            draw(canvasRef.current, history, policy, boardSize)
         }
     }, [ready, history, policy, boardSize])
 
