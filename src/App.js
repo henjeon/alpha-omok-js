@@ -13,7 +13,7 @@ import Readme from './components/Readme'
 import GameState from './GameState'
 import ZeroAgent from './ZeroAgent'
 import PVNet from './PVNet'
-import {sleep} from './Utils'
+import {isMobileOnly, isDevelopment, sleep} from './Utils'
 
 const useStyles = makeStyles({
     root: {
@@ -54,6 +54,16 @@ function App() {
         pvnet: pvnet,
     }))
 
+    async function getComputerAction(curGameState) {
+        let startTime = performance.now()                
+        let pos = await zeroAgent.asyncGetAction(curGameState)        
+        let endTime = performance.now()
+        
+        setAiThinkTime(endTime - startTime)
+        
+        return pos
+    }
+
     function goToNextState(curGameState, inputPos, autoPlay) {
         let newGameState = curGameState.clone()
         if (newGameState.step(inputPos)) {
@@ -63,7 +73,7 @@ function App() {
                 if (autoPlay) {
                     (async () => {
                         await sleep(1.0)
-                        let pos = await zeroAgent.asyncGetAction(newGameState)
+                        let pos = await getComputerAction(newGameState)
                         if (pos) {
                             goToNextState(newGameState, pos)
                         }
@@ -123,7 +133,7 @@ function App() {
     function onComputer() {
         if (appState === AppState.WAITING_FOR_INPUT) {
             (async () => {
-                let pos = await zeroAgent.asyncGetAction(gameState)
+                let pos = await getComputerAction(gameState)
                 if (pos) {
                     goToNextState(gameState, pos)
                 }
@@ -139,6 +149,13 @@ function App() {
         zeroAgent.setLevel(aiLevel)
     }
 
+    const [aiThinkTime, setAiThinkTime] = useState(0)
+    const debugText = `
+isMobileOnly: ${isMobileOnly}
+backend: ${pvnet.backendHint()}
+webgl.version: ${window.onnx.backend.webgl.glContext ? window.onnx.backend.webgl.glContext.version : 'undefined'}
+aiThinkTime: ${aiThinkTime * 0.001}s`
+
     const classes = useStyles()
     return (
         <div>
@@ -149,12 +166,13 @@ function App() {
                             AlphaOmok.js
                         </Typography>
                         <Typography variant='caption'>
-                            v0.1.0
+                            v0.1.1
                         </Typography>
                     </Grid>
                 </Toolbar>
             </AppBar>
             <Container>
+                { isDevelopment && <div style={{whiteSpace:"pre"}}> {debugText}</div> }
                 <Grid className={classes.root} container>
                     <Grid item>
                         <Game

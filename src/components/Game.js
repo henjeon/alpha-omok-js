@@ -64,10 +64,12 @@ export default function Game({
             setPolicy([])
         } else if (0 < gameState.history.length) {
             (async () => {
-                const modelInput = pvnet.getModelInput(gameState)
+                const modelInput = pvnet.getModelInput([gameState])
                 const modelOutput = await pvnet.asyncForward(modelInput)
                 if (modelOutput) {
-                    let value = modelOutput.value
+                    let policy = modelOutput.policies[0] 
+                    let value = modelOutput.values[0]
+
                     if (!GameState.isBlackTurn(gameState.turn)) {
                         value *= -1.0
                     }
@@ -76,9 +78,11 @@ export default function Game({
                     value = Math.min(Math.max(value, 1), 99)
     
                     setWinningRatio(value)
-                    setPolicy(modelOutput.policy)
+                    setPolicy(policy)
                 }
             })()
+        } else {
+            setPolicy([])
         }
 
         // eslint-disable-next-line

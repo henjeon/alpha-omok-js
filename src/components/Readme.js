@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
     }
 }))
 
-const text = `
+const textWhatIsIt = `
 # AlphaOmok.js
 _2021.01.21 전형규(oasis@henjeon.com)_
 
@@ -52,8 +52,21 @@ ui는 _react_와 _material-ui_를 사용하고 있습니다.
 
 모바일 기기에서도 실행가능하도록 MCTS 시뮬레이션 수를 크게 줄였습니다. 하나의 수를 탐색할 때 _EASY_ 난이도는 1번, _MEDIUM_ 난이도는 25번, _HARD_ 난이도는 400번의 시뮬레이션을 처리합니다.
 _HARD_ 난이도에서 수 하나를 찾는 시간은 PC에서 대략 30초가 걸립니다. 같은 설정으로 모바일 기기는 10배 이상 느리게 동작합니다.
+`
 
+const textChangeLog = `
 
+### 2020.01.24
+
+* PC나 태블릿 같은 모바일 기기가 아닌 디바이스에서의 AI 탐색 성능을 개선했습니다. 
+모바일 기기에서 이 기능을 활성화하려면 브라우저의 '데스크톱 사이트' 기능을 켜 보세요.
+
+* 바둑돌 위에 착수점 힌트가 표시되던 문제를 수정했습니다.
+* 다시 시작 후 바둑돌이 없는데 착수점 힌트가 표시되던 문제를 수정했습니다.
+
+### 2021.01.21
+
+* 최초 배포
 `
 
 export default function SimpleExpansionPanel() {
@@ -71,7 +84,21 @@ export default function SimpleExpansionPanel() {
                 </AccordionSummary>
                 <AccordionDetails>
                     <div>
-                        <ReactMarkdown source={text}/>
+                        <ReactMarkdown source={textWhatIsIt}/>
+                    </div>
+                </AccordionDetails>
+            </Accordion >
+            <Accordion >
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header"
+                >
+                    <Typography className={classes.heading}>변경점</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <div>
+                        <ReactMarkdown source={textChangeLog}/>
                     </div>
                 </AccordionDetails>
             </Accordion >

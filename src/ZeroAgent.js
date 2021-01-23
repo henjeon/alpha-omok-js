@@ -1,5 +1,5 @@
 import GameState from './GameState'
-import {sleep} from './Utils'
+import {sleep, isMobileOnly} from './Utils'
 
 class ZeroAgent {
     constructor({boardSize, pvnet}) {
@@ -22,18 +22,22 @@ class ZeroAgent {
         let rootNode = this.newNode()
         let numSimulations = this.numSimulations[this.level] + 1
 
+        let inferences = []
+
         for (let i = 0; i < numSimulations; ++i) {
             let curGameState = gameState.clone()
 
+            await this.processInferences(inferences, this.level < 2 || numSimulations <= i + 4)
+
             let leafNode = this.processSelection(rootNode, curGameState)
             if (leafNode.result === GameState.RESULT_NONE) {
-                await this.processExpansionAndEvaluation(leafNode, curGameState)
-            }
-            this.processBackup(leafNode)
-
-            // ui가 갱신될 수 있도록 yield합니다.
-            await sleep(0.01)
+                inferences.push([leafNode, curGameState])
+            } else {
+                this.processBackup(leafNode)
+            }            
         }
+
+        await this.processInferences(inferences, true)
 
         let maxVisitCount = -1
         let bestNodeIndex
@@ -59,6 +63,35 @@ class ZeroAgent {
             n: 0,
             w: 0.0,
             q: 0.0,
+            virtualLoss: 0.0,
+        }
+    }
+
+    async processInferences(inferences, force) {
+        if (inferences.length === 0) {
+            return
+        }
+
+        const maxInferenceQueueSize = isMobileOnly ? 1 : 4
+
+        if (force || maxInferenceQueueSize <= inferences.length) {
+            let modelInput = this.pvnet.getModelInput(inferences.reduce((a, e) => a.concat(e[1]), []))
+            let promise = this.pvnet.asyncForward(modelInput)
+            await sleep(0.01)  // ui가 갱신될 수 있도록 합니다.
+            let modelOutput = await promise
+
+            for (let i = 0; i < inferences.length; ++i) {
+                let [ leafNode, gameState ] = inferences[i]
+
+                this.processExpansionAndEvaluation(
+                    leafNode,
+                    gameState,
+                    modelOutput.policies[i],
+                    modelOutput.values[i])
+                this.processBackup(leafNode)
+            }
+
+            inferences.splice(0, inferences.length)
         }
     }
 
@@ -80,14 +113,16 @@ class ZeroAgent {
                 
                 let q = 0.0
                 let n = 0
+                let virtualLoss = 0.0
                 if (childNode) {
                     q = childNode.q
                     n = childNode.n
+                    virtualLoss = childNode.virtualLoss
                 }
 
                 const c_puct = 5
                 let u = c_puct * p * totalNSquared / (n + 1)
-                let qu = q + u
+                let qu = q + u - (virtualLoss / (n + 1))
 
                 if (bestChildIndex === -1 || maxQU < qu)
                 {
@@ -110,14 +145,16 @@ class ZeroAgent {
             }
 
             curNode = bestChildNode
+            curNode.virtualLoss += 1.0
         }
 
         return curNode
     }
 
-    async processExpansionAndEvaluation(leafNode, curGameState) {
-        let modelInput = this.pvnet.getModelInput(curGameState)
-        let {policy, value} = await this.pvnet.asyncForward(modelInput)
+    processExpansionAndEvaluation(leafNode, curGameState, policy, value) {
+        if (0 < leafNode.children.length) {
+            return
+        }
 
         let validPositions = curGameState.getValidPositions()
         let numChildren = validPositions.length
@@ -152,10 +189,10 @@ class ZeroAgent {
             curNode.n += 1
             curNode.w += value
             curNode.q = curNode.w / curNode.n
+            curNode.virtualLoss -= 1.0
 
             curNode = curNode.parent
             value *= -1.0
-
         }
     }
 }

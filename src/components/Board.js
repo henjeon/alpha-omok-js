@@ -71,7 +71,7 @@ function draw(canvas, history, policy, boardSize) {
     }
 
     // policy
-    if (policy && 0 < history.length) {
+    if (policy) {
         for (let i = 0; i < policy.length; ++i)
         {
             let row = Math.floor(i / boardSize)
